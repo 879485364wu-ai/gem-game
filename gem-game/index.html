@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>宝石消消乐</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #1a0533;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  }
+
+  /* 背景星星 */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #game-root {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+    padding: 0 8px;
+    padding-top: env(safe-area-inset-top, 12px);
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+  }
+
+  /* HUD */
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 10px;
+    margin-top: 8px;
+  }
+
+  .hud-card {
+    flex: 1;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 14px;
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    backdrop-filter: blur(8px);
+  }
+
+  .hud-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,.6);
+  }
+
+  .hud-value {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    color: #fff;
+  }
+
+  #moves-value { color: #FF6B6B; }
+  #score-value { color: #5DCAA5; }
+
+  /* 进度条 */
+  #prog-wrap {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,.1);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  #prog-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #1D9E75, #5DCAA5);
+    border-radius: 99px;
+    transition: width .4s ease;
+  }
+
+  /* 棋盘 */
+  #board-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 400px;
+  }
+
+  #bg-grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 6px;
+    gap: 4px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.1);
+  }
+
+  .cell-bg {
+    background: rgba(255,255,255,.05);
+    border-radius: 10px;
+  }
+
+  #gems-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .gem {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+    pointer-events: all;
+    transition: left .22s cubic-bezier(.4,0,.2,1), top .22s cubic-bezier(.4,0,.2,1);
+    will-change: transform, left, top;
+  }
+
+  .gem span {
+    display: block;
+    line-height: 1;
+    transition: transform .12s ease;
+  }
+
+  .gem:active span { transform: scale(.88); }
+
+  .gem.selected span {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 8px rgba(255,255,255,.9));
+  }
+
+  .gem.selected::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 13px;
+    border: 2.5px solid rgba(255,255,255,.9);
+    animation: pulse-ring .8s ease infinite;
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .5; transform: scale(1.04); }
+  }
+
+  .gem.matched span {
+    animation: pop .32s ease forwards;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(1.1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: .5; }
+    100% { transform: scale(0); opacity: 0; }
+  }
+
+  .gem.drop-in span {
+    animation: dropIn .35s cubic-bezier(.3,1.5,.5,1) forwards;
+  }
+
+  @keyframes dropIn {
+    0% { transform: scale(.3) translateY(-16px); opacity: 0; }
+    80% { transform: scale(1.1) translateY(2px); }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-7px); }
+    60% { transform: translateX(7px); }
+  }
+
+  .gem.shake { animation: shake .3s ease; }
+
+  /* 底部按钮 */
+  #bottom-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .btn {
+    flex: 1;
+    height: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.85);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background .15s;
+  }
+  .btn:active { background: rgba(255,255,255,.16); }
+  .btn.primary { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+  .btn.primary:active { background: #0F6E56; }
+
+  /* 浮动分数 */
+  .score-pop {
+    position: absolute;
+    pointer-events: none;
+    font-size: 20px;
+    font-weight: 900;
+    color: #5DCAA5;
+    text-shadow: 0 2px 8px rgba(0,0,0,.5);
+    z-index: 30;
+    animation: floatUp .9s ease forwards;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    30% { transform: translateY(-10px) scale(1.15); }
+    100% { opacity: 0; transform: translateY(-50px) scale(.9); }
+  }
+
+  /* Combo */
+  #combo-toast {
+    position: fixed;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    font-size: 36px;
+    font-weight: 900;
+    color: #FAC775;
+    text-shadow: 0 4px 20px rgba(0,0,0,.5);
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0;
+    transition: transform .2s cubic-bezier(.3,1.4,.5,1), opacity .25s ease;
+  }
+  #combo-toast.show { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+
+  /* 遮罩弹窗 */
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,2,26,.8);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    backdrop-filter: blur(6px);
+  }
+  #overlay.show { display: flex; }
+
+  .overlay-card {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 24px;
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-width: 260px;
+    text-align: center;
+  }
+
+  #overlay-title {
+    font-size: 32px;
+    font-weight: 900;
+    color: #FAC775;
+  }
+
+  #overlay-msg {
+    font-size: 15px;
+    color: rgba(255,255,255,.75);
+    line-height: 1.6;
+  }
+
+  #restart-btn {
+    margin-top: 8px;
+    width: 100%;
+    height: 50px;
+    border-radius: 16px;
+    background: #1D9E75;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  #restart-btn:active { background: #0F6E56; }
+
+  /* 粒子 */
+  .particle {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 25;
+    animation: burst .6s ease forwards;
+  }
+  @keyframes burst {
+    0% { opacity: 1; transform: scale(1) translate(0,0); }
+    100% { opacity: 0; transform: scale(.3) translate(var(--tx), var(--ty)); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="game-root">
+  <div id="hud">
+    <div class="hud-card">
+      <div class="hud-label">分数</div>
+      <div class="hud-value" id="score-value">0</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">目标</div>
+      <div class="hud-value" id="target-value">1000</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">步数</div>
+      <div class="hud-value" id="moves-value">30</div>
+    </div>
+  </div>
+
+  <div id="prog-wrap"><div id="prog-bar"></div></div>
+
+  <div id="board-wrap">
+    <div id="bg-grid"></div>
+    <div id="gems-layer"></div>
+  </div>
+
+  <div id="bottom-bar">
+    <button class="btn" id="hint-btn">💡 提示</button>
+    <button class="btn primary" id="restart-btn2">↺ 重新开始</button>
+  </div>
+</div>
+
+<div id="combo-toast"></div>
+
+<div id="overlay">
+  <div class="overlay-card">
+    <div id="overlay-title">🎉 完成！</div>
+    <div id="overlay-msg">得分：0</div>
+    <button id="restart-btn">再来一局</button>
+  </div>
+</div>
+
+<script>
+// ---- 背景星星 ----
+(function() {
+  const cv = document.getElementById('bg-canvas');
+  const ctx = cv.getContext('2d');
+  let stars = [];
+  function resize() {
+    cv.width = window.innerWidth;
+    cv.height = window.innerHeight;
+    stars = Array.from({length: 80}, () => ({
+      x: Math.random() * cv.width,
+      y: Math.random() * cv.height,
+      r: Math.random() * 1.5 + .3,
+      a: Math.random(),
+      s: Math.random() * .005 + .002
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    stars.forEach(s => {
+      s.a += s.s; if (s.a > 1 || s.a < 0) s.s *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${s.a * .7})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', resize);
+  resize(); draw();
+})();
+
+// ---- 游戏核心 ----
+const COLS = 8, ROWS = 8;
+const GEMS = ['🍓','🍊','🍋','🍇','💎','⭐','🍀','🔥'];
+const GEM_BG = [
+  'rgba(250,100,80,.35)','rgba(255,180,60,.35)','rgba(255,230,80,.35)',
+  'rgba(180,100,250,.35)','rgba(80,180,255,.35)','rgba(255,220,80,.35)',
+  'rgba(80,220,120,.35)','rgba(255,100,60,.35)'
+];
+const TARGET = 1000, MAX_MOVES = 30;
+
+let board = [], selected = null, busy = false, score = 0, moves = MAX_MOVES, combo = 0;
+let CELL = 44, GAP = 4, STEP = 48, OFFSET = 6;
+
+const boardWrap = document.getElementById('board-wrap');
+const bgGrid = document.getElementById('bg-grid');
+const gemsLayer = document.getElementById('gems-layer');
+const scoreEl = document.getElementById('score-value');
+const movesEl = document.getElementById('moves-value');
+const progEl = document.getElementById('prog-bar');
+const overlay = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlay-title');
+const overlayMsg = document.getElementById('overlay-msg');
+const comboToast = document.getElementById('combo-toast');
+
+function calcSize() {
+  const w = Math.min(boardWrap.offsetWidth, 400);
+  GAP = 4; OFFSET = 6;
+  CELL = Math.floor((w - 2 * OFFSET - (COLS + 1) * GAP) / COLS);
+  STEP = CELL + GAP;
+  bgGrid.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+  bgGrid.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
+  bgGrid.style.gap = GAP + 'px';
+  bgGrid.style.padding = OFFSET + 'px';
+}
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function pos(i) { return OFFSET + i * STEP + GAP; }
+
+function initBoard() {
+  calcSize();
+  bgGrid.innerHTML = '';
+  gemsLayer.innerHTML = '';
+  board = []; score = 0; moves = MAX_MOVES; combo = 0;
+  updateHUD(); overlay.classList.remove('show');
+
+  for (let r = 0; r < ROWS; r++) {
+    board[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      const bg = document.createElement('div');
+      bg.className = 'cell-bg';
+      bgGrid.appendChild(bg);
+      board[r][c] = pickSafe(r, c);
+    }
+  }
+  renderAll();
+}
+
+function pickSafe(r, c) {
+  let t;
+  do { t = rand(GEMS.length); } while (
+    (c >= 2 && board[r][c-1] === t && board[r][c-2] === t) ||
+    (r >= 2 && board[r-1]?.[c] === t && board[r-2]?.[c] === t)
+  );
+  return t;
+}
+
+function gemEl(r, c) {
+  return gemsLayer.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+}
+
+function renderAll() {
+  gemsLayer.innerHTML = '';
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (board[r][c] !== null) makeGem(r, c, board[r][c], false);
+}
+
+function makeGem(r, c, type, anim) {
+  const el = document.createElement('div');
+  el.className = 'gem' + (anim ? ' drop-in' : '');
+  el.dataset.r = r; el.dataset.c = c;
+  el.style.cssText = `
+    left:${pos(c)}px; top:${pos(r)}px;
+    width:${CELL}px; height:${CELL}px;
+    background:${GEM_BG[type]};
+    border: 1px solid rgba(255,255,255,.15);
+  `;
+  if (anim) el.style.animationDelay = (c * .025 + r * .01) + 's';
+  const span = document.createElement('span');
+  span.textContent = GEMS[type];
+  span.style.fontSize = Math.round(CELL * .52) + 'px';
+  el.appendChild(span);
+  el.addEventListener('click', () => onTap(r, c));
+  gemsLayer.appendChild(el);
+  return el;
+}
+
+function moveGem(el, r, c, falling) {
+  el.dataset.r = r; el.dataset.c = c;
+  if (falling) {
+    el.style.transition = `top .28s cubic-bezier(.4,0,.6,1)`;
+  } else {
+    el.style.transition = `left .2s ease, top .2s ease`;
+  }
+  el.style.left = pos(c) + 'px';
+  el.style.top = pos(r) + 'px';
+  el.onclick = () => onTap(r, c);
+}
+
+function updateHUD() {
+  scoreEl.textContent = score;
+  movesEl.textContent = moves;
+  progEl.style.width = Math.min(score / TARGET * 100, 100) + '%';
+}
+
+// touch support
+let touchStart = null;
+gemsLayer.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  touchStart = {x: t.clientX, y: t.clientY};
+}, {passive: true});
+
+gemsLayer.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  touchStart = null;
+  if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; // tap handled by click
+  if (selected === null) return;
+  const {r, c} = selected;
+  let r2 = r, c2 = c;
+  if (Math.abs(dx) > Math.abs(dy)) c2 += dx > 0 ? 1 : -1;
+  else r2 += dy > 0 ? 1 : -1;
+  if (r2 < 0 || r2 >= ROWS || c2 < 0 || c2 >= COLS) return;
+  const prevEl = gemEl(r, c);
+  if (prevEl) prevEl.classList.remove('selected');
+  selected = null;
+  trySwap(r, c, r2, c2);
+}, {passive: true});
+
+function onTap(r, c) {
+  if (busy) return;
+  if (selected === null) {
+    selected = {r, c};
+    const el = gemEl(r, c); if (el) el.classList.add('selected');
+    return;
+  }
+  const {r: sr, c: sc} = selected;
+  const prev = gemEl(sr, sc); if (prev) prev.classList.remove('selected');
+  if (sr === r && sc === c) { selected = null; return; }
+  const adj = Math.abs(sr-r) + Math.abs(sc-c) === 1;
+  selected = null;
+  if (!adj) {
+    selected = {r, c};
+    const el = gemEl(r, c); if (el) el.classList.add('selected');
+    return;
+  }
+  trySwap(sr, sc, r, c);
+}
+
+async function trySwap(r1, c1, r2, c2) {
+  busy = true;
+  swap(r1, c1, r2, c2); animSwap(r1, c1, r2, c2); await wait(210);
+  const m = findMatches();
+  if (!m.length) {
+    swap(r1, c1, r2, c2); animSwap(r1, c1, r2, c2); await wait(210);
+    shakeEl(gemEl(r1,c1)); shakeEl(gemEl(r2,c2));
+    busy = false; return;
+  }
+  moves--; updateHUD(); combo = 0;
+  await cascade(m);
+  checkEnd();
+  busy = false;
+}
+
+function swap(r1,c1,r2,c2) { [board[r1][c1],board[r2][c2]] = [board[r2][c2],board[r1][c1]]; }
+
+function animSwap(r1,c1,r2,c2) {
+  const a = gemEl(r1,c1), b = gemEl(r2,c2);
+  if (a) moveGem(a, r2, c2, false);
+  if (b) moveGem(b, r1, c1, false);
+}
+
+function shakeEl(el) {
+  if (!el) return;
+  el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+}
+
+function findMatches() {
+  const s = new Set();
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS-2; c++) {
+      const t = board[r][c];
+      if (t===null) continue;
+      let l=3; while(c+l<COLS && board[r][c+l]===t) l++;
+      if (board[r][c+1]===t && board[r][c+2]===t)
+        for (let k=0;k<l;k++) s.add(`${r},${c+k}`);
+    }
+  for (let c = 0; c < COLS; c++)
+    for (let r = 0; r < ROWS-2; r++) {
+      const t = board[r][c];
+      if (t===null) continue;
+      let l=3; while(r+l<ROWS && board[r+l][c]===t) l++;
+      if (board[r+1][c]===t && board[r+2][c]===t)
+        for (let k=0;k<l;k++) s.add(`${r+k},${c}`);
+    }
+  return [...s].map(k => { const [r,c]=k.split(',').map(Number); return {r,c}; });
+}
+
+async function cascade(matches) {
+  combo++;
+  const pts = matches.length * 10 * combo;
+  score += pts; updateHUD();
+  spawnScorePop(pts, matches);
+  if (combo >= 2) showCombo(combo);
+  spawnParticles(matches);
+
+  matches.forEach(({r,c}) => {
+    const el = gemEl(r,c);
+    if (el) el.classList.add('matched');
+    board[r][c] = null;
+  });
+  await wait(340);
+  matches.forEach(({r,c}) => { const el = gemEl(r,c); if (el) el.remove(); });
+
+  await applyGravity();
+  await wait(60);
+  refill();
+  await wait(360);
+
+  const next = findMatches();
+  if (next.length) await cascade(next);
+}
+
+async function applyGravity() {
+  let moved = false;
+  for (let c = 0; c < COLS; c++) {
+    let empties = [];
+    for (let r = ROWS-1; r >= 0; r--) {
+      if (board[r][c] === null) empties.push(r);
+      else if (empties.length) {
+        const t = empties.shift();
+        const el = gemEl(r, c);
+        board[t][c] = board[r][c]; board[r][c] = null;
+        if (el) moveGem(el, t, c, true);
+        empties.push(r); moved = true;
+      }
+    }
+  }
+  if (moved) await wait(310);
+}
+
+function refill() {
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (board[r][c] === null) {
+        board[r][c] = rand(GEMS.length);
+        makeGem(r, c, board[r][c], true);
+      }
+}
+
+function spawnScorePop(pts, matches) {
+  const mr = Math.round(matches.reduce((s,m)=>s+m.r,0)/matches.length);
+  const mc = Math.round(matches.reduce((s,m)=>s+m.c,0)/matches.length);
+  const el = document.createElement('div');
+  el.className = 'score-pop';
+  el.textContent = '+' + pts;
+  el.style.left = pos(mc) + 'px';
+  el.style.top = pos(mr) + 'px';
+  gemsLayer.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+function spawnParticles(matches) {
+  const colors = ['#5DCAA5','#FAC775','#FF6B6B','#7F77DD','#85B7EB'];
+  matches.slice(0, 6).forEach(({r, c}) => {
+    for (let i = 0; i < 4; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const angle = (i / 4) * Math.PI * 2 + Math.random() * .5;
+      const dist = 24 + rand(20);
+      p.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+      p.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+      p.style.left = (pos(c) + CELL/2 - 4) + 'px';
+      p.style.top = (pos(r) + CELL/2 - 4) + 'px';
+      p.style.background = colors[rand(colors.length)];
+      gemsLayer.appendChild(p);
+      setTimeout(() => p.remove(), 650);
+    }
+  });
+}
+
+let comboTimer;
+function showCombo(n) {
+  const labels = ['','','双倍！','三连！','超级！','疯狂！','传说！'];
+  comboToast.textContent = labels[Math.min(n, labels.length-1)] || n+'连！';
+  comboToast.classList.add('show');
+  clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => comboToast.classList.remove('show'), 950);
+}
+
+function checkEnd() {
+  if (score >= TARGET) {
+    overlayTitle.textContent = '🎉 关卡完成！';
+    overlayMsg.textContent = `得分 ${score} 分\n剩余步数 ${moves} 步`;
+    overlay.classList.add('show'); return;
+  }
+  if (moves <= 0) {
+    const pct = Math.round(score / TARGET * 100);
+    overlayTitle.textContent = pct >= 70 ? '😅 差一点！' : '💔 再接再厉';
+    overlayMsg.textContent = `得分 ${score} / ${TARGET}\n完成度 ${pct}%`;
+    overlay.classList.add('show');
+  }
+}
+
+document.getElementById('restart-btn').addEventListener('click', initBoard);
+document.getElementById('restart-btn2').addEventListener('click', initBoard);
+
+document.getElementById('hint-btn').addEventListener('click', () => {
+  if (busy) return;
+  const h = findHint();
+  if (!h) return;
+  shakeEl(gemEl(h.r1,h.c1)); shakeEl(gemEl(h.r2,h.c2));
+});
+
+function findHint() {
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      for (const [dr,dc] of [[0,1],[1,0]]) {
+        const r2=r+dr, c2=c+dc;
+        if (r2>=ROWS||c2>=COLS) continue;
+        swap(r,c,r2,c2);
+        const m = findMatches();
+        swap(r,c,r2,c2);
+        if (m.length) return {r1:r,c1:c,r2,c2};
+      }
+  return null;
+}
+
+window.addEventListener('resize', () => {
+  calcSize();
+  renderAll();
+  updateHUD();
+});
+
+initBoard();
+</script>
+</body>
+</html>
