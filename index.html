@@ -1784,6 +1784,7 @@ function selectAnswer(idx) {
   clearInterval(timerInterval);
 
   const q = quizList[currentQ];
+  if(!q) return; // 安全检查
   const isCorrect = idx === q.answer;
   const opts = document.getElementById('options-list');
   if(!opts) return; // 安全检查
@@ -1809,20 +1810,23 @@ function selectAnswer(idx) {
     const gained = Math.round(base*mult*(gameMode==='practice'?1:timeBonus));
     score += gained;
 
-    // 特效
-    flashQuestionCard(true);
-    addOptionRipple(opts[idx]);
-    spawnParticles();
-    if(gained >= 30) spawnScoreExplosion(gained);
+    // 特效（独立try-catch，不影响答题主流程）
+    try {
+      flashQuestionCard(true);
+      addOptionRipple(opts.children[idx]);
+      spawnParticles();
+      if(gained >= 30) spawnScoreExplosion(gained);
+    } catch(e) { console.log('特效错误(不影响答题):', e); }
 
+    // 答题逻辑（核心流程）
     if(gameMode==='ai') updateAIBattleBar();
     if(gameMode!=='practice') showCorrectOverlay(gained, combo);
-    if(combo>=3) showComboFloat(combo);
-
+    if(combo>=3) { try{ showComboFloat(combo); }catch(e){} }
     if(gameMode==='practice') showAnalysis(q);
+
   } else {
     combo = 0;
-    flashQuestionCard(false);
+    try { flashQuestionCard(false); } catch(e) {}
     if(gameMode!=='practice') showWrongOverlay(q.answer, q.options[q.answer]);
     if(gameMode==='practice') showAnalysis(q);
   }
@@ -2000,18 +2004,20 @@ function quitQuiz() {
 // 特效
 // ============================================================
 function spawnParticles() {
-  const emojis=['✨','💜','🌸','⭐','💫'];
-  for(let i=0;i<5;i++){
-    const p=document.createElement('div');
-    p.className='particle';
-    p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
-    p.style.left=(25+Math.random()*50)+'vw';
-    p.style.top=(25+Math.random()*35)+'vh';
-    p.style.setProperty('--tx',(Math.random()*100-50)+'px');
-    p.style.setProperty('--ty',(Math.random()*-70-10)+'px');
-    document.body.appendChild(p);
-    setTimeout(()=>p.remove(),800);
-  }
+  try {
+    const emojis=['✨','💜','🌸','⭐','💫'];
+    for(let i=0;i<5;i++){
+      const p=document.createElement('div');
+      p.className='particle';
+      p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+      p.style.left=(25+Math.random()*50)+'vw';
+      p.style.top=(25+Math.random()*35)+'vh';
+      p.style.setProperty('--tx',(Math.random()*100-50)+'px');
+      p.style.setProperty('--ty',(Math.random()*-70-10)+'px');
+      document.body.appendChild(p);
+      setTimeout(()=>{ try{p.remove();}catch(e){} },800);
+    }
+  } catch(e) {}
 }
 
 function showComboFloat(n) {
@@ -2211,29 +2217,34 @@ startPetals();
 // 答题特效增强
 // ============================================================
 function flashQuestionCard(correct) {
-  const card = document.querySelector('.question-card');
-  if(!card) return;
-  card.classList.remove('flash-correct','shake-wrong');
-  void card.offsetWidth;
-  card.classList.add(correct ? 'flash-correct' : 'shake-wrong');
-  setTimeout(()=>card.classList.remove('flash-correct','shake-wrong'),600);
+  try {
+    const card = document.querySelector('.question-card');
+    if(!card) return;
+    card.classList.remove('flash-correct','shake-wrong');
+    void card.offsetWidth;
+    card.classList.add(correct ? 'flash-correct' : 'shake-wrong');
+    setTimeout(()=>{ try{card.classList.remove('flash-correct','shake-wrong');}catch(e){} },600);
+  } catch(e) { console.log('flashQuestionCard error:', e); }
 }
 
 function spawnScoreExplosion(pts) {
-  const el = document.createElement('div');
-  el.className = 'score-explosion';
-  el.textContent = '+'+pts;
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),1000);
+  try {
+    const el = document.createElement('div');
+    el.className = 'score-explosion';
+    el.textContent = '+'+pts;
+    document.body.appendChild(el);
+    setTimeout(()=>{ try{el.remove();}catch(e){} },1000);
+  } catch(e) {}
 }
 
 function addOptionRipple(btn) {
+  if(!btn || !btn.style) return; // null保护
   const r = document.createElement('div');
   r.className = 'option-ripple';
   btn.style.position = 'relative';
   btn.style.overflow = 'hidden';
   btn.appendChild(r);
-  setTimeout(()=>r.remove(),500);
+  setTimeout(()=>{ try{r.remove();}catch(e){} },500);
 }
 
 // ============================================================
