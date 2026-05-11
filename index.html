@@ -1848,7 +1848,9 @@ function autoWrong() {
   if(answered) return;
   answered = true;
   combo = 0;
+  if(currentQ >= quizList.length) { endGame(); return; }
   const q = quizList[currentQ];
+  if(!q) return;
   const opts = document.getElementById('options-list');
   if(!opts) return;
   if(opts.children[q.answer]) opts.children[q.answer].classList.add('correct');
@@ -1916,10 +1918,12 @@ function updateToolUI() {
 
 function useTool(type) {
   if(answered) return;
+  if(currentQ >= quizList.length) return;
   const t = window._tools;
   if(type==='hint' && t.hint>0 && gameMode!=='practice') {
     t.hint--;
     const q = quizList[currentQ];
+    if(!q) return;
     const opts = document.getElementById('options-list');
     let done=0;
     for(let i=0;i<4;i++){
@@ -1930,6 +1934,7 @@ function useTool(type) {
     clearInterval(timerInterval);
     timerVal += 5;
     const q = quizList[currentQ];
+    if(!q) return;
     startTimerFrom(timerVal, q.time+5);
   } else if(type==='skip' && t.skip>0) {
     t.skip--;
