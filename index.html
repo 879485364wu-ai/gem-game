@@ -1685,15 +1685,29 @@ function loadQuestion() {
   const lt = safeEl('q-level-tag'); if(lt) { lt.textContent = q.level; lt.className = 'q-level-tag '+q.level; }
   const qtxt = safeEl('question-text'); if(qtxt) qtxt.textContent = q.q;
 
-  // 渲染选项
+  // 渲染选项（随机打乱顺序）
   const ol = document.getElementById('options-list');
+  if(!ol) return;
   ol.innerHTML = '';
-  q.options.forEach((opt,i) => {
+
+  // 生成打乱后的选项索引
+  const optIndices = [0,1,2,3];
+  for(let i=optIndices.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [optIndices[i],optIndices[j]]=[optIndices[j],optIndices[i]];
+  }
+  // 记录正确答案在打乱后的新位置
+  const shuffledCorrectIdx = optIndices.indexOf(q.answer);
+  // 存到当前题上，供selectAnswer使用
+  window._currentCorrectIdx = shuffledCorrectIdx;
+  window._currentOptIndices = optIndices;
+
+  optIndices.forEach((origIdx, newPos) => {
     const btn = document.createElement('div');
     btn.className = 'option-btn';
-    btn.id = 'opt-'+i;
-    btn.innerHTML = `<div class="option-letter">${LETTERS[i]}</div><div class="option-text">${opt}</div><div class="option-mark" id="mark-${i}"></div>`;
-    btn.addEventListener('click', () => selectAnswer(i));
+    btn.id = 'opt-'+newPos;
+    btn.innerHTML = `<div class="option-letter">${LETTERS[newPos]}</div><div class="option-text">${q.options[origIdx]}</div><div class="option-mark" id="mark-${newPos}"></div>`;
+    btn.addEventListener('click', () => selectAnswer(newPos));
     ol.appendChild(btn);
   });
 
@@ -1785,7 +1799,10 @@ function selectAnswer(idx) {
 
   const q = quizList[currentQ];
   if(!q) return; // 安全检查
-  const isCorrect = idx === q.answer;
+  // 用打乱后的映射判断是否正确
+  const origIdx = window._currentOptIndices ? window._currentOptIndices[idx] : idx;
+  const isCorrect = origIdx === q.answer;
+  const correctDisplayIdx = window._currentCorrectIdx !== undefined ? window._currentCorrectIdx : q.answer;
   const opts = document.getElementById('options-list');
   if(!opts) return; // 安全检查
 
@@ -1794,8 +1811,9 @@ function selectAnswer(idx) {
   const markEl = document.getElementById('mark-'+idx); if(markEl) markEl.textContent = isCorrect ? '✓' : '✕';
 
   if(!isCorrect) {
-    if(opts.children[q.answer]) opts.children[q.answer].classList.add('correct');
-    const markAns = document.getElementById('mark-'+q.answer); if(markAns) markAns.textContent = '✓';
+    // 显示正确答案在新位置的选项
+    if(opts.children[correctDisplayIdx]) opts.children[correctDisplayIdx].classList.add('correct');
+    const markAns = document.getElementById('mark-'+correctDisplayIdx); if(markAns) markAns.textContent = '✓';
   }
 
   // 禁用所有选项点击
@@ -1827,7 +1845,7 @@ function selectAnswer(idx) {
   } else {
     combo = 0;
     try { flashQuestionCard(false); } catch(e) {}
-    if(gameMode!=='practice') showWrongOverlay(q.answer, q.options[q.answer]);
+    if(gameMode!=='practice') showWrongOverlay(correctDisplayIdx, q.options[q.answer]);
     if(gameMode==='practice') showAnalysis(q);
   }
 
@@ -1853,11 +1871,13 @@ function autoWrong() {
   if(!q) return;
   const opts = document.getElementById('options-list');
   if(!opts) return;
-  if(opts.children[q.answer]) opts.children[q.answer].classList.add('correct');
-  const markAuto = document.getElementById('mark-'+q.answer); if(markAuto) markAuto.textContent = '✓';
+  const autoCorrectIdx = window._currentCorrectIdx !== undefined ? window._currentCorrectIdx : q.answer;
+  if(opts.children[autoCorrectIdx]) opts.children[autoCorrectIdx].classList.add('correct');
+  const markAuto = document.getElementById('mark-'+autoCorrectIdx); if(markAuto) markAuto.textContent = '✓';
   Array.from(opts.children).forEach(b => b.classList.add('disabled-opt'));
 
-  if(gameMode!=='practice') showWrongOverlay(q.answer, q.options[q.answer]);
+  const autoCorrectDisplay = window._currentCorrectIdx !== undefined ? window._currentCorrectIdx : q.answer;
+  if(gameMode!=='practice') showWrongOverlay(autoCorrectDisplay, q.options[q.answer]);
   if(gameMode==='practice') {
     showAnalysis(q);
     const nb2 = document.getElementById('next-btn');
@@ -1925,9 +1945,13 @@ function useTool(type) {
     const q = quizList[currentQ];
     if(!q) return;
     const opts = document.getElementById('options-list');
+    if(!opts) return;
+    const correctPos = window._currentCorrectIdx !== undefined ? window._currentCorrectIdx : q.answer;
     let done=0;
     for(let i=0;i<4;i++){
-      if(i!==q.answer&&done<1){opts.children[i].classList.add('hint-x');done++;}
+      if(i!==correctPos && done<1 && opts.children[i] && !opts.children[i].classList.contains('hint-x')){
+        opts.children[i].classList.add('hint-x'); done++;
+      }
     }
   } else if(type==='time' && t.time>0 && gameMode!=='practice') {
     t.time--;
