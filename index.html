@@ -748,7 +748,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="home-glow-center"></div>
 
     <div class="home-top" style="position:relative;z-index:1;">
-    <div class="avatar-btn" onclick="showScreen('profile-screen')">👤<div class="avatar-dot"></div></div>
+    <div class="avatar-btn" id="home-avatar-btn" onclick="showScreen('profile-screen')"><span id="home-avatar-icon">👤</span><div class="avatar-dot"></div></div>
   </div>
   <div class="logo-area" style="position:relative;z-index:1;">
     <!-- 皇冠装饰 -->
@@ -2138,8 +2138,10 @@ window.addEventListener('load', () => {
   // 恢复个人信息
   const ad = document.getElementById('profile-avatar-display');
   const nd = document.getElementById('profile-name-display');
+  const hi = document.getElementById('home-avatar-icon');
   if(ad) ad.textContent = _profile.avatar;
   if(nd) nd.textContent = _profile.name;
+  if(hi) hi.textContent = _profile.avatar;
   saveStats();
   
   // 延迟300ms显示签到
@@ -2319,6 +2321,8 @@ function selectAvatar(a) {
   try{localStorage.setItem('qwzb_profile',JSON.stringify(_profile));}catch(e){}
   const d=document.getElementById('profile-avatar-display');
   if(d)d.textContent=a;
+  const hi=document.getElementById('home-avatar-icon');
+  if(hi)hi.textContent=a;
   const picker=document.getElementById('avatar-picker');
   if(picker)picker.style.display='none';
   showToast('头像已更新！');
