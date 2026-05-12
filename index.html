@@ -104,11 +104,20 @@ body::after{content:'';position:fixed;inset:0;
 .tag-soon{background:rgba(180,180,180,0.2);color:var(--text3);}
 
 /* 底部导航 */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-top:0.5px solid var(--border);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:50;}
+.bottom-nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:420px;
+  background:rgba(30,10,60,0.96);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(180,100,255,0.3);
+  box-shadow:0 -4px 24px rgba(100,40,200,0.25);
+  display:flex;padding:8px 0 18px;z-index:100;
+}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;}
 .nav-icon{font-size:20px;}
-.nav-label{font-size:10px;color:var(--text3);}
-.nav-item.active .nav-label{color:var(--pink);}
+.nav-label{font-size:10px;color:rgba(180,140,220,0.6);}
+.nav-item.active .nav-label{color:#ff85c8;text-shadow:0 0 8px rgba(255,133,200,0.6);}
 
 /* ===== IP选择后显示模式 ===== */
 /* ===== 答题屏 ===== */
@@ -1874,7 +1883,7 @@ body::after{content:'';position:fixed;inset:0;
       </div>
       <div style="padding:4px 5px;background:rgba(25,8,55,0.95);">
         <div style="font-size:10px;font-weight:700;color:#f0d8ff;">致命游戏</div>
-        <div style="font-size:6px;color:rgba(180,120,255,0.5);">THE DEADLY GAME</div>
+        <div style="font-size:6px;color:rgba(180,120,255,0.5);">THE SPIREALM</div>
       </div>
     </div>
     <div id="ip-h-1" onclick="selectIPH(1)" style="flex-shrink:0;width:92px;border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid rgba(160,80,255,0.3);">
@@ -1935,12 +1944,43 @@ body::after{content:'';position:fixed;inset:0;
   </div>
 </div>
 
+<div style="height:85px;"></div>
+
 <!-- 底导 -->
 <div class="bottom-nav" style="margin-top:8px;">
-  <div class="nav-item active"><div class="nav-icon">♛</div><div class="nav-label">首页</div></div>
-  <div class="nav-item" onclick="showScreen('tools-screen')"><div class="nav-icon">💫</div><div class="nav-label">道具</div></div>
-  <div class="nav-item" onclick="showScreen('rank-screen')"><div class="nav-icon">🏆</div><div class="nav-label">排行</div></div>
-  <div class="nav-item" onclick="showScreen('profile-screen')"><div class="nav-icon">🌸</div><div class="nav-label">我的</div></div>
+
+  <!-- 首页 -->
+  <div class="nav-item active" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;">
+    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(180,100,255,0.35),rgba(255,80,180,0.25));border:1.5px solid rgba(200,120,255,0.6);display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(180,100,255,0.4);">
+      <span style="font-size:20px;">🏠</span>
+    </div>
+    <div class="nav-label" style="color:#ff85c8;font-weight:600;">首页</div>
+  </div>
+
+  <!-- 道具 -->
+  <div class="nav-item" onclick="showScreen('tools-screen')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+    <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(180,100,255,0.2);display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:20px;">🎒</span>
+    </div>
+    <div class="nav-label">道具</div>
+  </div>
+
+  <!-- 排行 -->
+  <div class="nav-item" onclick="showScreen('rank-screen')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+    <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(180,100,255,0.2);display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:20px;">🏆</span>
+    </div>
+    <div class="nav-label">排行</div>
+  </div>
+
+  <!-- 我的 -->
+  <div class="nav-item" onclick="showScreen('profile-screen')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+    <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(180,100,255,0.2);display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:20px;">👤</span>
+    </div>
+    <div class="nav-label">我的</div>
+  </div>
+
 </div>
 
 </div>
