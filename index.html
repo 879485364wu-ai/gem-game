@@ -1785,9 +1785,13 @@ body::after{content:'';position:fixed;inset:0;
     </div>
     <div style="width:20px;height:20px;background:#ff85a1;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;">+</div>
   </div>
-  <div style="display:flex;gap:5px;flex-shrink:0;">
-    <div style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.35);border-radius:9px;padding:5px 9px;font-size:12px;color:white;font-weight:600;">···</div>
-    <div style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.35);border-radius:9px;padding:5px 9px;font-size:12px;color:white;">⊙</div>
+  <div style="display:flex;gap:6px;flex-shrink:0;">
+    <div onclick="showScreen('tools-screen')" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,180,255,0.4);border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+      <span style="font-size:14px;">🎒</span><span style="font-size:11px;font-weight:700;color:white;">道具</span>
+    </div>
+    <div onclick="showScreen('profile-screen')" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,180,255,0.4);border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+      <span style="font-size:14px;">👤</span><span style="font-size:11px;font-weight:700;color:white;">我的</span>
+    </div>
   </div>
 </div>
 
@@ -1944,44 +1948,7 @@ body::after{content:'';position:fixed;inset:0;
   </div>
 </div>
 
-<div style="height:85px;"></div>
 
-<!-- 底导 -->
-<div class="bottom-nav" style="margin-top:8px;">
-
-  <!-- 首页 -->
-  <div class="nav-item active" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;">
-    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(180,100,255,0.35),rgba(255,80,180,0.25));border:1.5px solid rgba(200,120,255,0.6);display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(180,100,255,0.4);">
-      <span style="font-size:20px;">🏠</span>
-    </div>
-    <div class="nav-label" style="color:#ff85c8;font-weight:600;">首页</div>
-  </div>
-
-  <!-- 道具 -->
-  <div class="nav-item" onclick="showScreen('tools-screen')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
-    <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(180,100,255,0.2);display:flex;align-items:center;justify-content:center;">
-      <span style="font-size:20px;">🎒</span>
-    </div>
-    <div class="nav-label">道具</div>
-  </div>
-
-  <!-- 排行 -->
-  <div class="nav-item" onclick="showScreen('rank-screen')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
-    <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(180,100,255,0.2);display:flex;align-items:center;justify-content:center;">
-      <span style="font-size:20px;">🏆</span>
-    </div>
-    <div class="nav-label">排行</div>
-  </div>
-
-  <!-- 我的 -->
-  <div class="nav-item" onclick="showScreen('profile-screen')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
-    <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(180,100,255,0.2);display:flex;align-items:center;justify-content:center;">
-      <span style="font-size:20px;">👤</span>
-    </div>
-    <div class="nav-label">我的</div>
-  </div>
-
-</div>
 
 </div>
 <!-- ===== AI匹配屏 ===== -->
