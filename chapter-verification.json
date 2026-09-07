@@ -1,16 +1,16 @@
 {
-  "release": "chapter-one-20260907",
+  "release": "chapter-one-20260907.2",
   "chapter_scope": "airport return through restaurant departure",
   "source_scope": "uploaded chapter 1 and restaurant portion of chapter 2",
   "local_tests": "passed",
-  "voice_paused": true,
-  "minimax_calls": 0,
+  "voice_paused": false,
+  "minimax_calls": 4,
   "real_deepseek_validation": "passed",
-  "deployment": "ready-to-deploy",
-  "online_verified": false,
+  "deployment": "live",
+  "online_verified": true,
   "browser_visual_validation": "local preview blocked by browser client",
-  "test_groups": 19,
-  "public_source_upload": "ready",
+  "test_groups": 24,
+  "public_source_upload": "completed",
   "real_cases": [
     "赵向卓打听陈，沈在场主动问缘由",
     "自由离桌独处，保持当前章节",
@@ -21,5 +21,89 @@
     11.1,
     2.2,
     2.4
+  ],
+  "voice_clone_calls": 0,
+  "voice_live_case": {
+    "online": true,
+    "verifiedAt": "2026-09-07T08:16:28.024Z",
+    "release": "chapter-one-20260907.2",
+    "status": {
+      "chen": true,
+      "zhao": true,
+      "provider": "MiniMax",
+      "samples": true,
+      "paused": false
+    },
+    "cloneCalls": 0,
+    "audio": [
+      {
+        "speaker": "chen",
+        "text": "赵先生。",
+        "bytes": 18996,
+        "seconds": 1.52,
+        "file": "chapter-online-chen.mp3"
+      },
+      {
+        "speaker": "zhao",
+        "text": "你好。",
+        "bytes": 18420,
+        "seconds": 0.95,
+        "file": "chapter-online-zhao.mp3"
+      }
+    ]
+  },
+  "online_verified_at": "2026-09-07T08:16:32.245Z",
+  "live_runtime_commit": "e0e9f183241d1e3e199494631d6aab33c3baf14d",
+  "render_deploy_id": "dep-daf757gn74is738lcrkg",
+  "live_url": "https://wefans-qiluo-online.onrender.com/",
+  "completed_routes": [
+    {
+      "role": "chen",
+      "ending": "灯仍亮着",
+      "steps": 19,
+      "modelTurns": 1
+    },
+    {
+      "role": "zhao",
+      "ending": "名字与细节",
+      "steps": 18,
+      "modelTurns": 2
+    }
+  ],
+  "full_routes_runtime_commit": "71213bf1fbf4544a4af9e3e7ba98e3f9277070df",
+  "followup_validation": "After full route checks, NPC factual bounds, familiar address and nonblocking character audio were changed. The affected dialogue and both character TTS outputs were rechecked over HTTPS on the final runtime.",
+  "guard_live_case": {
+    "online": true,
+    "seconds": 3.5,
+    "verifiedAt": "2026-09-07T08:16:32.245Z",
+    "messages": [
+      {
+        "speaker": "zhao",
+        "text": "陈挽平日都在忙什么？这些安排一直都是他照应？"
+      },
+      {
+        "speaker": "zhuo",
+        "text": "卓智轩把刚拿起的公筷搁回筷枕上，朝陈挽那头的空茶杯抬了抬下巴，才转回赵声阁这边。\n“他这阵子没怎么跟我碰面，具体忙什么我还真说不上。今晚这桌是他张罗的，人还没坐下就先对了一遍菜单。”"
+      },
+      {
+        "speaker": "shen",
+        "text": "沈宗年原本听着，至此把杯子放回桌上。\n“你怎么忽然问起陈挽？”"
+      }
+    ]
+  },
+  "first_build_transient_error": "GitHub connection timed out once; Render retry recovered and deployed successfully.",
+  "full_route_checks_before_voice_restore": {
+    "release": true,
+    "frontend": true,
+    "voicePaused": true,
+    "savedProgress": true,
+    "legacyEntry": true,
+    "bothPerspectivesComplete": true,
+    "realModel": true
+  },
+  "runtime_error_logs_since_deploy": [],
+  "known_limitations": [
+    "Free NPC wording may still add unestablished details despite scoped validators; continue calibration from concrete play transcripts.",
+    "Browser visual/playback interaction was not verified; signed TTS endpoints and decoded MP3 durations were verified."
   ]
 }
