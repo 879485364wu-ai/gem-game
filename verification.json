@@ -7,11 +7,11 @@
   "voice_paused": true,
   "minimax_calls_during_this_change": 0,
   "real_deepseek_validation": "passed",
-  "new_revision_deployed": false,
+  "new_revision_deployed": true,
   "live_url": "https://wefans-qiluo-online.onrender.com/",
   "render_service_id": "srv-daf3unmq1p3s73bi4hj0",
   "previous_runtime_commit": "10c645a271a3e7f3c19eb2519425edf4c896f079",
-  "public_source_upload": "authorized_pending_push",
+  "public_source_upload": "completed",
   "voice_pause_commit": "587b0d0e651bc1d4ca02bbfd39c4861164c8073c",
   "voice_pause_deployed": true,
   "release": "causality-20260907",
@@ -20,5 +20,24 @@
     "overheard_interest_generates_active_question",
     "take_open_umbrella_move_and_stay_dry"
   ],
-  "real_integration_checked_at": "2026-09-07T06:30:56.767209+00:00"
+  "real_integration_checked_at": "2026-09-07T06:30:56.767209+00:00",
+  "live_runtime_commit": "ffd5c72fafa6fca6e3cf1dc3bca2506e76f54b75",
+  "render_deploy_id": "dep-daf5l2740ujc739nbbu0",
+  "online_verified_at": "2026-09-07T06:35:04.050294+00:00",
+  "live_https_checks": {
+    "release_marker": true,
+    "health": true,
+    "invitation_gate": true,
+    "free_action_frontend": true,
+    "voice_paused": true,
+    "real_invitation_arrival_and_question": true,
+    "real_observer_active_question": true,
+    "real_umbrella_inventory_position_and_dry_state": true
+  },
+  "observed_turn_seconds": {
+    "委托卓找沈": 6.8,
+    "当着沈的面打听陈": 6,
+    "独自去门厅取伞并出门": 1.6
+  },
+  "latest_error_logs": []
 }
