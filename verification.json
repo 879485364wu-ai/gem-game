@@ -1,0 +1,38 @@
+{
+  "checks": "passed",
+  "test_command": "node --test tests/online.test.mjs",
+  "scope": [
+    "gate and cookies",
+    "cross-origin rejection",
+    "private source protection",
+    "both protagonists",
+    "NPC reported versus verified causal state",
+    "role-specific voice IDs",
+    "dialogue-only TTS",
+    "voice cache",
+    "missing voice configuration",
+    "in-process Node request adapter"
+  ],
+  "supplier_requests": "Real DeepSeek and MiniMax integration passed; automated security/causality checks use mocks",
+  "deployed_to_render": false,
+  "voice_cloning_completed": true,
+  "browser_audio_tested": false,
+  "samples": {
+    "chen": {
+      "source_seconds": 20.586667,
+      "converted_to": "MP3",
+      "minimax_duration_eligible": true,
+      "preprocessing": "input gain normalization, Kim_Vocal_2.onnx vocal separation",
+      "human_listening_confirmed": false,
+      "asr_before_after": "main dialogue retained; automatic comparison only"
+    },
+    "zhao": {
+      "source_seconds": 21.205333,
+      "converted_to": "MP3",
+      "minimax_duration_eligible": true
+    }
+  },
+  "real_gateway_integration": "passed: both player roles, real DeepSeek replies and 4 MiniMax MP3 generations",
+  "deployment_blockers": [],
+  "integration_completed_at": "2026-09-07T04:28:43.631Z"
+}

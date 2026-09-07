@@ -1,0 +1,26 @@
+{
+  "name": "wefans-qiluo-online",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node --check server.mjs",
+    "rebuild": "node scripts/rebuild.mjs"
+  },
+  "devDependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "lucide-react": "1.31.0",
+    "radix-ui": "1.6.7",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.6.0",
+    "zod": "3.25.76",
+    "esbuild": "0.28.0"
+  }
+}

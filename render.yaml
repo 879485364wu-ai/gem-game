@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: wefans-qiluo-online
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: QILUO_API_KEY
+        sync: false
+      - key: QILUO_STATE_SECRET
+        generateValue: true
+      - key: TEST_ACCESS_CODE
+        sync: false
+      - key: QILUO_MODEL
+        value: deepseek-v4-pro
+      - key: MINIMAX_API_KEY
+        sync: false
+      - key: CHEN_VOICE_ID
+        sync: false
+      - key: ZHAO_VOICE_ID
+        sync: false
+      - key: MINIMAX_TTS_MODEL
+        value: speech-2.8-hd
