@@ -1,53 +1,24 @@
 {
-  "checks": "passed",
-  "test_command": "node --test tests/online.test.mjs",
-  "scope": [
-    "gate and cookies",
-    "cross-origin rejection",
-    "private source protection",
-    "both protagonists",
-    "NPC reported versus verified causal state",
-    "role-specific voice IDs",
-    "dialogue-only TTS",
-    "voice cache",
-    "missing voice configuration",
-    "in-process Node request adapter"
-  ],
-  "supplier_requests": "Real DeepSeek and MiniMax integration passed; automated security/causality checks use mocks",
-  "deployed_to_render": true,
-  "voice_cloning_completed": true,
-  "browser_audio_tested": false,
-  "samples": {
-    "chen": {
-      "source_seconds": 20.586667,
-      "converted_to": "MP3",
-      "minimax_duration_eligible": true,
-      "preprocessing": "input gain normalization, Kim_Vocal_2.onnx vocal separation",
-      "human_listening_confirmed": false,
-      "asr_before_after": "main dialogue retained; automatic comparison only"
-    },
-    "zhao": {
-      "source_seconds": 21.205333,
-      "converted_to": "MP3",
-      "minimax_duration_eligible": true
-    }
-  },
-  "real_gateway_integration": "passed over public HTTPS to live Render service",
-  "deployment_blockers": [],
-  "integration_completed_at": "2026-09-07T04:28:43.631Z",
-  "last_deployment_attempt": "2026-09-07T04:33:00.522535+00:00",
-  "render_service_id": "srv-daf3unmq1p3s73bi4hj0",
+  "version": "free-action-npc-causality-1",
+  "local_tests": "passed",
+  "test_groups": 8,
+  "test_command": "npm test",
+  "model_responses_in_tests": "mocked",
+  "voice_paused": true,
+  "minimax_calls_during_this_change": 0,
+  "real_deepseek_validation": "passed",
+  "new_revision_deployed": false,
   "live_url": "https://wefans-qiluo-online.onrender.com/",
-  "live_runtime_commit": "10c645a271a3e7f3c19eb2519425edf4c896f079",
-  "online_verified_at": "2026-09-07T04:41:05.406296+00:00",
-  "browser_landing_verified": true,
-  "live_https_checks": {
-    "health": true,
-    "invitation_gate": true,
-    "frontend": true,
-    "both_player_roles": true,
-    "real_deepseek_dialogue": true,
-    "four_role_bound_mp3_responses": true,
-    "mp3_decode": true
-  }
+  "render_service_id": "srv-daf3unmq1p3s73bi4hj0",
+  "previous_runtime_commit": "10c645a271a3e7f3c19eb2519425edf4c896f079",
+  "public_source_upload": "authorized_pending_push",
+  "voice_pause_commit": "587b0d0e651bc1d4ca02bbfd39c4861164c8073c",
+  "voice_pause_deployed": true,
+  "release": "causality-20260907",
+  "real_cases": [
+    "delegation_invitation_arrival_and_question",
+    "overheard_interest_generates_active_question",
+    "take_open_umbrella_move_and_stay_dry"
+  ],
+  "real_integration_checked_at": "2026-09-07T06:30:56.767209+00:00"
 }
