@@ -126,3 +126,28 @@ test('Unfounded claims about Chen are repaired before reaching the story or late
     const d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(calls,2);assert.ok(!d.view.messages.some(m=>/事杂|凑局|经手不细/.test(m.text)));assert.ok(!d.view.events.some(e=>/事杂|凑局|经手不细/.test(e.text)));assert.equal(d.view.messages.filter(m=>m.turn===d.view.turn&&m.speaker==='shen').length,1);
   }finally{globalThis.fetch=actual}
 });
+
+
+test('Two failed background repairs use a bounded answer while preserving Shen causality',async()=>{
+  const actual=globalThis.fetch;let calls=0;
+  globalThis.fetch=async()=>{calls++;return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({narrative:'卓智轩放下杯子。',dialogue:calls===1?'他主动揽的，说怕别人经手不细。':'他这人你还不知道？茶都替你续了三回。',used_event_ids:[]})}}],usage:{prompt_tokens:30,completion_tokens:20}})};
+  try{
+    const s=toPhase('zhao','dinner'),r=await handleDemoRequest(new Request('https://demo.example/api/qiluo/chapter/turn',{method:'POST',headers:{origin:'https://demo.example','Content-Type':'application/json'},body:JSON.stringify({token:await sealChapter(s,secret),requestId:crypto.randomUUID(),action:'say',target:'zhuo',private:false,text:'陈挽平日都在忙什么？这些安排一直都是他照应？'})}),{QILUO_API_KEY:'test-only',QILUO_STATE_SECRET:secret});
+    const d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(calls,2);
+    assert.ok(!d.view.messages.some(m=>/经手不细|三回|你还不知道/.test(m.text)));
+    assert.ok(d.view.messages.some(m=>m.speaker==='zhuo'&&m.text.includes('具体的你问他')));
+    assert.equal(d.view.messages.filter(m=>m.turn===d.view.turn&&m.speaker==='shen').length,1);
+    const restored=await unsealChapter(d.token,secret);assert.equal(restored.turn,s.turn+1);assert.equal(restored.usage.input,60);
+  }finally{globalThis.fetch=actual}
+});
+
+test('Familiar address is corrected without another paid call or a failed turn',async()=>{
+  const actual=globalThis.fetch;let calls=0;
+  globalThis.fetch=async()=>{calls++;return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({narrative:'卓智轩应了一声。',dialogue:'赵先生，您问他就好，近来的事我没细问。',used_event_ids:[]})}}],usage:{prompt_tokens:30,completion_tokens:20}})};
+  try{
+    const s=toPhase('zhao','dinner'),r=await handleDemoRequest(new Request('https://demo.example/api/qiluo/chapter/turn',{method:'POST',headers:{origin:'https://demo.example','Content-Type':'application/json'},body:JSON.stringify({token:await sealChapter(s,secret),requestId:crypto.randomUUID(),action:'say',target:'zhuo',private:true,text:'陈挽近来在忙什么？'})}),{QILUO_API_KEY:'test-only',QILUO_STATE_SECRET:secret});
+    const d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(calls,1);
+    assert.match(d.view.messages.at(-1).text,/声阁，你问他/);
+    assert.ok(!d.view.messages.some(m=>m.turn===d.view.turn&&m.speaker==='shen'));
+  }finally{globalThis.fetch=actual}
+});

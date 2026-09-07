@@ -62,7 +62,7 @@ test('Private affairs stay private; physical care still changes the recipient',(
 });
 
 test('Online auth, paused voice zero provider calls, API action flow and idempotency',async()=>{
- const dispatch=createOnlineDispatcher(env),actual=globalThis.fetch;let providerCalls=0;
+ const dispatch=createOnlineDispatcher({...env,VOICE_PAUSED:'true'}),actual=globalThis.fetch;let providerCalls=0;
  globalThis.fetch=async(url,options)=>{
    assert.equal(url,'https://api.deepseek.com/chat/completions','no MiniMax request while paused');providerCalls++;
    const body=JSON.parse(options.body),sys=body.messages[0].content;

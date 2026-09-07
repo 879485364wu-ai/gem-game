@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { audioContext, unlockAudio } from './audio-runtime';
 import { spokenDialogue } from '../lib/dialogue.mjs';
-type VoiceMessage = { id:string; speaker:string; source:string; text:string; action?:string };
-export function useRoleVoice(){
+type VoiceMessage = { id:string; speaker:string; source?:string; text:string; speech?:string; action?:string };
+export function useRoleVoice(story?:'chapter-one'){
   const [ready,setReady]=useState({chen:false,zhao:false});
   const [active,setActive]=useState('');
   const [loading,setLoading]=useState('');
@@ -48,7 +48,7 @@ export function useRoleVoice(){
       if(ticket!==generation.current)return;
       if(!spokenDialogue(m)||!ready[m.speaker as 'chen'|'zhao'])continue;
       setLoading(m.id);
-      try{const audio=await fetchAudio(m.speaker+':'+m.id,'/api/voice',ticket,{token,messageId:m.id});if(audio)await play(m.id,audio,ticket)}catch(e){report(e,ticket)}
+      try{const audio=await fetchAudio(m.speaker+':'+m.id,'/api/voice',ticket,{token,messageId:m.id,...(story?{story}:{})});if(audio)await play(m.id,audio,ticket)}catch(e){report(e,ticket)}
     }
     if(ticket===generation.current)setLoading('');
   }

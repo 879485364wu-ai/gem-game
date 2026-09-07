@@ -21,7 +21,7 @@ export function createOnlineDispatcher(env,{folder=root,now=Date.now}={}) {
   function authenticated(req){const token=(req.headers.get('cookie')||'').split(';').map(v=>v.trim()).find(v=>v.startsWith('qiluo_access='))?.slice(13);if(!token)return null;const [id,expires,sig,extra]=token.split('.');if(extra || !/^[a-f0-9]{32}$/.test(id) || !/^\d+$/.test(expires) || Number(expires)<now() || !sig || !equal(sign(id+'.'+expires),sig))return null;return id}
   return async function dispatch(req){
     const url=new URL(req.url);
-    if(url.pathname==='/healthz' && req.method==='GET')return json({ok:true,release:'chapter-one-20260907.1'});
+    if(url.pathname==='/healthz' && req.method==='GET')return json({ok:true,release:'chapter-one-20260907.2'});
     if(url.origin!==origin || req.headers.get('host')!==url.host)return json({error:'请使用正确的体验网址。'},403);
     if(req.method==='POST' && (req.headers.get('origin')!==origin || !req.headers.get('content-type')?.startsWith('application/json')))return json({error:'请从体验页面操作。'},403);
     if(req.method==='POST' && url.pathname==='/api/access'){
@@ -33,7 +33,7 @@ export function createOnlineDispatcher(env,{folder=root,now=Date.now}={}) {
     }
     const id=authenticated(req);
     if(!id){if(req.method==='GET' && ['/', '/login'].includes(url.pathname))return new Response(loginPage(),{headers:{...common,'Content-Type':'text/html; charset=utf-8'}});return json({error:'请刷新页面，输入测试口令后继续。'},401)}
-    if(url.pathname==='/api/qiluo/status' && req.method==='GET')return json({configured:true,mode:'live',release:'chapter-one-20260907.1',maxModelTurns:30,voices:voiceStatus(env)});
+    if(url.pathname==='/api/qiluo/status' && req.method==='GET')return json({configured:true,mode:'live',release:'chapter-one-20260907.2',maxModelTurns:30,voices:voiceStatus(env)});
     if(url.pathname==='/api/voice/status' && req.method==='GET')return json(voiceStatus(env));
     if(req.method==='GET' && ['/voice-chen.mp3','/voice-zhao.mp3'].includes(url.pathname)){
       if(limited('voice:'+id,80,3600000)||limited('all-requests',600,60000))return json({error:'语音试听过于频繁，请稍后再试。'},429);

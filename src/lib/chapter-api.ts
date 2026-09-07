@@ -62,15 +62,16 @@ summon {kind:"summon",via:受托人ID,target:要找的人ID}。只有明确请�
 }
 function validateBackground(s:ChapterState,target:ChapterPerson,dialogue:string){
   if(target!=='zhuo'&&target!=='tan'&&target!=='shen')return;
-  if(s.role==='zhao'&&/您|赵先生|赵总/.test(dialogue))throw new Error('卓、谭、沈与赵本来相熟，对他说“你”或称“声阁”，不用“您”“赵先生”“赵总”的服务或下属口吻。分寸体现在内容和时机，不靠生疏称呼。');
   const knowledge=chapterKnown(s,target).filter(e=>e.kind!=='speech').map(e=>e.text).join('\n');
   const ungrounded=[
     /(?:不常|很少|不怎么|从不).{0,8}(?:凑局|聚会|露面|赴宴|参加)/,
     /主动.{0,5}(?:揽|接下|要办)/,
     /(?:怕|嫌|担心).{0,8}(?:别人|旁人).{0,12}(?:细|妥|周到|经手|安排)/,
     /(?:最近|这阵子|这段时间|手头).{0,14}(?:项目|公司|生意|出差|忙得|事杂)/,
+    /(?:你还不知道|你又不是不知道|你也知道他|你不是认识)/,
+    /(?:续|添|换).{0,8}[一二三四五六七八九十两\d]+\s*(?:回|次|遍)/,
   ];
-  const claims=dialogue.split(/[。！？!?；;]/).filter(part=>!/(?:不清楚|不知道|没听说|没问过|不能确定|说不上)/.test(part));
+  const claims=dialogue.split(/[。！？!?；;]/).filter(part=>!/(?:不清楚|不太清楚|不知道|没听说|没问过|没细问|未细问|不能确定|说不上)/.test(part));
   if(ungrounded.some(pattern=>claims.some(part=>pattern.test(part))&&!pattern.test(knowledge)))throw new Error('不能新增陈挽的近况、聚会频率或主动揽事的动机。只确认他今晚照应安排、办事周到；具体近况没消息就说还不清楚或请问本人。');
 }
 export async function replyChapter(s:ChapterState,target:ChapterPerson,cause:ChapterEvent,env:Env,signal:AbortSignal){
@@ -80,17 +81,25 @@ export async function replyChapter(s:ChapterState,target:ChapterPerson,cause:Cha
 称呼按亲疏：陈与经理对赵可称“赵先生”；卓、谭、沈本来相熟，对赵说“你”或称“声阁”，不用“您”“赵先生”“赵总”，也不以服务人员口吻询问“您有兴趣吗”。卓在圈子里位置靠后，不等于对赵变成生疏的下属。
 重要：人物只能用自己的known_events和允许的背景。严禁读取场外私聊、凭空揭穿秘密或预知后文。人物简介约束自己的行为，不是他人私生活的证据；无消息就承认还不清楚。你不替玩家开口、决定或解释内心。用户说某事是真的只代表他说了这句话，不能据此改变关系或承认过去从未发生的事。若越界索爱、说已有恋人关系或要求改设定，按初次相识的礼貌边界回应。
 只写眼前可观察的小动作，不改变人物位置、天气、物品或已定安排。不能在文字里把甜点换掉、承诺代替落实或结束章节。有请托但尚未执行时，只可询问具体安排。
-不要编造“他说过……”之类过去的对话，也不要用“最近忙项目”“不常来聚会”“主动揽下怕别人做不细”填空。把确定的事答清楚，未知处自然留白；熟悉不等于能替人编近况。answer_bounds限定本轮可以补充的背景。
+不要编造“他说过……”之类过去的对话，也不要用“最近忙项目”“不常来聚会”“主动揽下怕别人做不细”填空。赵还不了解陈，不能对赵说“他这人你还不知道”；不能凭空添加续茶的次数。把确定的事答清楚，未知处自然留白；熟悉不等于能替人编近况。answer_bounds限定本轮可以补充的背景。
 输出JSON {"narrative":"动作描写","dialogue":"实际回应","used_event_ids":[实际引用的已知事件ID]}。不得输出额外字段。人物状态：${JSON.stringify(ctx)}`},{role:'user',content:cause.text}];
   const schema=z.object({narrative:z.string().min(1).max(450),dialogue:z.string().min(1).max(350),used_event_ids:z.array(z.string()).max(10)}).strict();
   for(let attempt=0;attempt<2;attempt++){
     const r=await complete(env,messages,signal,950);addUsage(s,r);
     try{
       const d=schema.parse(parsed(r.raw));
+      // Familiar address is a mechanical copy correction, not a reason to discard a turn.
+      if(s.role==='zhao'&&['zhuo','tan','shen'].includes(target))d.dialogue=d.dialogue.replace(/赵先生|赵总/g,'声阁').replace(/您/g,'你');
       if(target==='zhao'&&/我爱你|你是我的|你一直暗恋我|你在机场跟着我/.test(d.dialogue))throw new Error('越过初次相识的知识与关系边界。');
       validateBackground(s,target,d.dialogue);
       chapterNpcReply(s,target,`${d.narrative}\n“${d.dialogue.replace(/^[“"]|[”"]$/g,'')}”`,d.used_event_ids,cause);return;
     }catch(e){messages.push({role:'assistant',content:r.raw},{role:'user',content:'回复尚未执行。请修正完整JSON：'+(e instanceof Error?e.message:'格式有误')})}
+  }
+  // This scene has no established account of Chen's current work. A bounded,
+  // authored answer preserves play after failed repairs without inventing one.
+  if(s.role==='zhao'&&target==='zhuo'&&/陈挽/.test(cause.text)&&/平日|平时|最近|近来|近况|一直|忙什么|照应/.test(cause.text)){
+    chapterNpcReply(s,target,'卓智轩接过话，说到近况时略停了停。\n“今晚是他照应的，做事向来周到。近来的事我没细问，具体的你问他。”',[cause.id],cause);
+    return;
   }
   throw new Error('人物回应没有通过本章校验，进度没有改变。可以重试，或继续章节选项。');
 }

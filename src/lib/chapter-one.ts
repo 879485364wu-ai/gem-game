@@ -23,7 +23,7 @@ export const PHASES: {id:ChapterPhase;name:string;subtitle:string}[] = [
   {id:'ended',name:'本章终',subtitle:'这一晚，留下了什么'},
 ];
 export type ChapterEvent = {id:string;turn:number;actor:ChapterPerson|'world';text:string;witnesses:ChapterPerson[];cause?:string;kind:string};
-export type ChapterMessage = {id:string;speaker:ChapterPerson|'scene';text:string;turn:number;kind:'scene'|'dialogue'|'player'|'chapter'};
+export type ChapterMessage = {id:string;speaker:ChapterPerson|'scene';text:string;speech?:string;turn:number;kind:'scene'|'dialogue'|'player'|'chapter'};
 export type ChapterTrace = {id:string;observer:ChapterPerson;actor:ChapterPerson;reason:string;eventId:string};
 export type ChapterState = {
   story:'qiluo-chapter-one';version:1;id:string;created:number;role:ChapterRole;phase:ChapterPhase;turn:number;modelCalls:number;
@@ -45,7 +45,13 @@ function event(s:ChapterState,actor:ChapterEvent['actor'],text:string,witnesses:
 }
 function record(s:ChapterState,actor:ChapterPerson,text:string,witnesses:ChapterPerson[]=ALL.filter(p=>s.positions[p]===s.positions[actor]),kind='action',cause?:string){
   const e=event(s,actor,text,witnesses,kind,cause);
-  if(witnesses.includes(s.role))message(s,actor,text,actor===s.role?'player':'dialogue');return e;
+  if(witnesses.includes(s.role)){
+    message(s,actor,text,actor===s.role?'player':'dialogue');
+    if(kind==='speech'&&['chen','zhao'].includes(actor)){
+      const quotes=[...text.matchAll(/“([^”]+)”|「([^」]+)」|"([^"\n]+)"/g)];
+      s.messages.at(-1)!.speech=(quotes.length?quotes.map(m=>m[1]||m[2]||m[3]).join(' '):actor===s.role?text:'').replace(/（[^）]*）|\([^)]*\)|\*[^*]*\*/g,'').trim();
+    }
+  }return e;
 }
 function scene(s:ChapterState,text:string){message(s,'scene',text)}
 function response(s:ChapterState,actor:ChapterPerson,text:string,witnesses:ChapterPerson[],cause?:string){return record(s,actor,text,witnesses,'speech',cause)}
