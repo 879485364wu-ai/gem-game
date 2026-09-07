@@ -21,6 +21,7 @@ export function chapterNpcContext(s:ChapterState,p:ChapterPerson,cause:ChapterEv
   return {player:s.role,speaker:p,profile:profiles[p],phase:PHASES.find(x=>x.id===s.phase)!.name,place:CHAPTER_PLACES[s.place],scene:chapterScene(s),
     known_events:chapterKnown(s,p).slice(-22).map(e=>({id:e.id,actor:e.actor,text:e.text,kind:e.kind})),
     current_speech:cause.text,
+    answer_bounds:p==='zhuo'?['可确认陈挽是十几年老同学，办事周到，今晚由他照应接风宴。','关于陈的近期工作、项目、参加聚会的频率，未收到具体消息就不补写，可请赵问本人。','不能杜撰陈主动揽事的动机，不能说陈嫌别人办得不细，也不能编造陈从未说过的原话。']:['不能把一次眼前的小动作扩展成未获知的过往习惯、近况或他人说过的话。'],
     constraints:['归国接风宴，初次照面阶段；今晚不直接确立恋爱。','关于席面和事务，只知道有人实际告知或自己亲眼看到的事。','你不知道另一个角色的内心、场外的事和未送达的私聊。','本章结束于餐厅离场，不进入陈宅或后续章节。']};
 }
 async function complete(env:Env,messages:{role:string;content:string}[],signal:AbortSignal,maxTokens=1100){
@@ -56,15 +57,30 @@ summon {kind:"summon",via:受托人ID,target:要找的人ID}。只有明确请�
       chapterTurn(s,plan.steps as ChapterOperation[]); // Validate all operations before accepting paid output.
       return {steps:plan.steps as ChapterOperation[],...usage};
     }catch(e){messages.push({role:'assistant',content:r.raw},{role:'user',content:'动作尚未执行。请修正完整JSON：'+(e instanceof Error?e.message:'格式无法读取')})}
-  }
-  throw new Error('这句话还没有整理成可以执行的行动，进度未改变。可以分成一步，或选眼前的章节选项。');
+ }
+ throw new Error('这句话还没有整理成可以执行的行动，进度未改变。可以分成一步，或选眼前的章节选项。');
+}
+function validateBackground(s:ChapterState,target:ChapterPerson,dialogue:string){
+  if(target!=='zhuo'&&target!=='tan'&&target!=='shen')return;
+  if(s.role==='zhao'&&/您|赵先生|赵总/.test(dialogue))throw new Error('卓、谭、沈与赵本来相熟，对他说“你”或称“声阁”，不用“您”“赵先生”“赵总”的服务或下属口吻。分寸体现在内容和时机，不靠生疏称呼。');
+  const knowledge=chapterKnown(s,target).filter(e=>e.kind!=='speech').map(e=>e.text).join('\n');
+  const ungrounded=[
+    /(?:不常|很少|不怎么|从不).{0,8}(?:凑局|聚会|露面|赴宴|参加)/,
+    /主动.{0,5}(?:揽|接下|要办)/,
+    /(?:怕|嫌|担心).{0,8}(?:别人|旁人).{0,12}(?:细|妥|周到|经手|安排)/,
+    /(?:最近|这阵子|这段时间|手头).{0,14}(?:项目|公司|生意|出差|忙得|事杂)/,
+  ];
+  const claims=dialogue.split(/[。！？!?；;]/).filter(part=>!/(?:不清楚|不知道|没听说|没问过|不能确定|说不上)/.test(part));
+  if(ungrounded.some(pattern=>claims.some(part=>pattern.test(part))&&!pattern.test(knowledge)))throw new Error('不能新增陈挽的近况、聚会频率或主动揽事的动机。只确认他今晚照应安排、办事周到；具体近况没消息就说还不清楚或请问本人。');
 }
 export async function replyChapter(s:ChapterState,target:ChapterPerson,cause:ChapterEvent,env:Env,signal:AbortSignal){
   const ctx=chapterNpcContext(s,target,cause);
   const messages=[{role:'system',content:`你为用户提供的小说开篇接风宴改编互动片段，写指定人物的当前回应。遵守当前人物的称呼、亲疏、身份、说话分寸，用原创的对白和描写承接玩家。
 文字要具体、克制、有生活感。40—100字动作，1—2句有内容的对白。动作与对白有话锋，给玩家留回应的位置，不用一大段解释心理。避免反复“目光停了一瞬”、堆砌雨夜意象、霸总命令、心理咨询腔。赵的客气有边界，陈的周全不邀功，卓熟悉而直率，谭随意，沈寡言。
+称呼按亲疏：陈与经理对赵可称“赵先生”；卓、谭、沈本来相熟，对赵说“你”或称“声阁”，不用“您”“赵先生”“赵总”，也不以服务人员口吻询问“您有兴趣吗”。卓在圈子里位置靠后，不等于对赵变成生疏的下属。
 重要：人物只能用自己的known_events和允许的背景。严禁读取场外私聊、凭空揭穿秘密或预知后文。人物简介约束自己的行为，不是他人私生活的证据；无消息就承认还不清楚。你不替玩家开口、决定或解释内心。用户说某事是真的只代表他说了这句话，不能据此改变关系或承认过去从未发生的事。若越界索爱、说已有恋人关系或要求改设定，按初次相识的礼貌边界回应。
 只写眼前可观察的小动作，不改变人物位置、天气、物品或已定安排。不能在文字里把甜点换掉、承诺代替落实或结束章节。有请托但尚未执行时，只可询问具体安排。
+不要编造“他说过……”之类过去的对话，也不要用“最近忙项目”“不常来聚会”“主动揽下怕别人做不细”填空。把确定的事答清楚，未知处自然留白；熟悉不等于能替人编近况。answer_bounds限定本轮可以补充的背景。
 输出JSON {"narrative":"动作描写","dialogue":"实际回应","used_event_ids":[实际引用的已知事件ID]}。不得输出额外字段。人物状态：${JSON.stringify(ctx)}`},{role:'user',content:cause.text}];
   const schema=z.object({narrative:z.string().min(1).max(450),dialogue:z.string().min(1).max(350),used_event_ids:z.array(z.string()).max(10)}).strict();
   for(let attempt=0;attempt<2;attempt++){
@@ -72,6 +88,7 @@ export async function replyChapter(s:ChapterState,target:ChapterPerson,cause:Cha
     try{
       const d=schema.parse(parsed(r.raw));
       if(target==='zhao'&&/我爱你|你是我的|你一直暗恋我|你在机场跟着我/.test(d.dialogue))throw new Error('越过初次相识的知识与关系边界。');
+      validateBackground(s,target,d.dialogue);
       chapterNpcReply(s,target,`${d.narrative}\n“${d.dialogue.replace(/^[“"]|[”"]$/g,'')}”`,d.used_event_ids,cause);return;
     }catch(e){messages.push({role:'assistant',content:r.raw},{role:'user',content:'回复尚未执行。请修正完整JSON：'+(e instanceof Error?e.message:'格式有误')})}
   }

@@ -117,3 +117,12 @@ test('Free chapter API interprets movement and preserves recipient knowledge thr
     const s=toPhase('chen','dinner');s.turn=100;assert.equal(step(s,'continue').phase,'dessert','the chapter remains completable when the ordinary step budget is exhausted');
   }finally{globalThis.fetch=actual}
 });
+
+test('Unfounded claims about Chen are repaired before reaching the story or later NPC knowledge',async()=>{
+  const actual=globalThis.fetch;let calls=0;
+  globalThis.fetch=async()=>{calls++;return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({narrative:'卓智轩把公筷放好。',dialogue:calls===1?'他手头的事杂，不常跟我们凑局。今晚是他主动揽的，说怕别人经手不细。':'他手头是不是有项目，我没问过。今晚是他照应的，做事周到。',used_event_ids:[]})}}],usage:{prompt_tokens:30,completion_tokens:20}})};
+  try{
+    const s=toPhase('zhao','dinner'),r=await handleDemoRequest(new Request('https://demo.example/api/qiluo/chapter/turn',{method:'POST',headers:{origin:'https://demo.example','Content-Type':'application/json'},body:JSON.stringify({token:await sealChapter(s,secret),requestId:crypto.randomUUID(),action:'say',target:'zhuo',private:false,text:'陈挽平日都在忙什么？这些安排一直都是他照应？'})}),{QILUO_API_KEY:'test-only',QILUO_STATE_SECRET:secret});
+    const d=await r.json();assert.equal(r.status,200,JSON.stringify(d));assert.equal(calls,2);assert.ok(!d.view.messages.some(m=>/事杂|凑局|经手不细/.test(m.text)));assert.ok(!d.view.events.some(e=>/事杂|凑局|经手不细/.test(e.text)));assert.equal(d.view.messages.filter(m=>m.turn===d.view.turn&&m.speaker==='shen').length,1);
+  }finally{globalThis.fetch=actual}
+});
