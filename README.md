@@ -1,3 +1,7 @@
+# 第一章开发状态
+
+新增完整第一章“风球之下”，默认入口为双视角章节。范围、玩法和校验情况见 [CHAPTER_ONE.md](CHAPTER_ONE.md)。线上发布状态以 [chapter-verification.json](chapter-verification.json) 为准；以下保留上一版自由体验说明。
+
 # WeFans · 奇洛在线试玩
 
 试玩入口：https://wefans-qiluo-online.onrender.com/ （需邀请人提供的测试口令）

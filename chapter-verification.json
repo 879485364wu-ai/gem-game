@@ -1,0 +1,25 @@
+{
+  "release": "chapter-one-20260907",
+  "chapter_scope": "airport return through restaurant departure",
+  "source_scope": "uploaded chapter 1 and restaurant portion of chapter 2",
+  "local_tests": "passed",
+  "voice_paused": true,
+  "minimax_calls": 0,
+  "real_deepseek_validation": "passed",
+  "deployment": "ready-to-deploy",
+  "online_verified": false,
+  "browser_visual_validation": "local preview blocked by browser client",
+  "test_groups": 19,
+  "public_source_upload": "ready",
+  "real_cases": [
+    "赵向卓打听陈，沈在场主动问缘由",
+    "自由离桌独处，保持当前章节",
+    "首次照面的称呼与边界"
+  ],
+  "authorization": "User explicitly approved this chapter upload to public repository 879485364wu-ai/gem-game and transmitting character settings/scenes/dialogue to api.deepseek.com for generation and testing.",
+  "observed_local_real_seconds": [
+    11.1,
+    2.2,
+    2.4
+  ]
+}

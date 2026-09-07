@@ -6,7 +6,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const prior=await readFile(root+'/public/index.html','utf8');
 const assets=JSON.parse(prior.match(/window\.__QILUO_ASSETS__=(\{.*?\});/s)[1]);
 const ui=await build({entryPoints:[root+'/src/entry.tsx'],bundle:true,write:false,format:'iife',platform:'browser',target:'es2022',charset:'utf8',minify:true,jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},alias:{'@':root+'/src'}});
-const css=(await readFile(root+'/src/styles.css','utf8')).replace(/<\/style/gi,'<\\/style');
+const css=((await readFile(root+'/src/styles.css','utf8'))+'\n'+(await readFile(root+'/src/chapter.css','utf8'))).replace(/<\/style/gi,'<\\/style');
 const js=('window.__QILUO_ASSETS__='+JSON.stringify(assets)+';'+ui.outputFiles[0].text).replace(/<\/script/gi,'<\\/script');
 await writeFile(root+'/public/index.html','<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WeFans · 奇洛 · 在线体验</title><style>'+css+'</style></head><body><div id="root"></div><script>'+js+'</script></body></html>');
 await build({entryPoints:[root+'/src/lib/qiluo-api.ts'],outfile:root+'/lib/story-api.mjs',bundle:true,format:'esm',platform:'node',target:'node22',charset:'utf8',minify:true});

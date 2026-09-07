@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { handleChapterRequest } from './chapter-api';
+export { initialChapter, chapterView, chapterTurn, chapterNpcReply, chapterChoices, chapterKnown, sealChapter, unsealChapter, chapterNpcContext } from './chapter-api';
 export { initialDemo, applyTurn, applyPlannedTurn, applyNpcActions, publicDemo } from './qiluo-demo';
 import { applyTurn, applyPlannedTurn, applyNpcActions, present, attitude, initialDemo, ensureWorld, clock, PEOPLE, PLACES, SCENES, ITEMS, publicDemo, type DemoState, type Person, type WorldOperation } from './qiluo-demo';
 
@@ -160,6 +162,7 @@ const json = (body: unknown, status = 200) => Response.json(body, { status, head
 const running = new Map<string, { created: number; response: Promise<{ body: unknown; status: number }> }>();
 export async function handleDemoRequest(request: Request, env: Bindings): Promise<Response> {
   const url = new URL(request.url);
+  if(url.pathname.startsWith('/api/qiluo/chapter/'))return handleChapterRequest(request,env);
   const configured = Boolean(env.QILUO_API_KEY && env.QILUO_STATE_SECRET);
   if (request.method === 'GET' && url.pathname === '/api/qiluo/status') return json({ configured, mode: 'live', maxModelTurns: 30 });
   if (request.method !== 'POST') return json({ error: '不支持此请求。' }, 405);
